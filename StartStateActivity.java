@@ -1,9 +1,10 @@
-package com.example.test2java;
+package com.example.primaryjavalongaga;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 // 1. "extends" makes this a real Android Screen
@@ -19,8 +20,10 @@ public class StartStateActivity extends AppCompatActivity {
         // Make sure you have a file named activity_start.xml in res/layout!
         setContentView(R.layout.activity_start);
 
-        //initialize classes
-        //currentRound = new Round();
+
+        // Used to ensure the player selects a valid starting option
+        // before continuing to the main game loop.
+        //boolean isValidChoice = false;
 
         // 4. Find the button you made in XML (we'll assume the ID is "start_button")
         Button newGButton = findViewById(R.id.new_game);
@@ -30,8 +33,8 @@ public class StartStateActivity extends AppCompatActivity {
         newGButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // This is the "Bridge" to the next screen
-                Intent intent = new Intent(StartStateActivity.this, MainActivity.class);
+                Intent intent = new Intent(StartStateActivity.this, TournamentScoreActivity.class);
+                //intent.putExtra("PLAYER_CHOICE", 1);
                 startActivity(intent);
             }
         });
@@ -41,6 +44,7 @@ public class StartStateActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // This is the "Bridge" to the next screen
                 Intent intent = new Intent(StartStateActivity.this, MainActivity.class);
+                intent.putExtra("PLAYER_CHOICE", 2);
                 startActivity(intent);
             }
         });
