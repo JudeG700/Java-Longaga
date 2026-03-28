@@ -1,12 +1,4 @@
 package com.example.primaryjavalongaga.models;
-
-import android.content.Intent;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.example.primaryjavalongaga.R;
-
 import java.util.List;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,6 +17,8 @@ public class Round {
     private int nextPlayer;
     private boolean[] passed = new boolean[2];
 
+    private int leftEnd;
+    private int rightEnd;
 
     // These objects represent the tiles currently held by each participant.
     Hand humanHand = new Hand();
@@ -41,8 +35,6 @@ public class Round {
 
     // These variables store the numeric values at the left and right
     // ends of the layout so the program can determine legal tile placements.
-    int leftEnd;
-    int rightEnd;
 
     // Represents the collection of remaining tiles that players
     // may draw from when they cannot make a legal move.
@@ -76,11 +68,6 @@ public class Round {
         passed[1] = false;
     }
 
-    TextView gameLog;
-
-    public void log(String message) {
-        gameLog.append(message + "\n");
-    }
 
 
     public String obtainEngine() {
@@ -103,7 +90,8 @@ public class Round {
 
                 eIndex = players[1].getHand().getHandTiles().indexOf(engine);
                 players[1].removeTile(eIndex);
-                currentPlayer = 1;
+                //currentPlayer = 0;
+                setCurrentPlayer(0);
 
             } /*else {
                 log("Computer doesn't have engine either");
@@ -116,7 +104,8 @@ public class Round {
 
             eIndex = players[0].getHand().getHandTiles().indexOf(engine);
             players[0].removeTile(eIndex);
-            currentPlayer = 0;
+            setCurrentPlayer(1);
+            //currentPlayer = 1;
         }
 
         while (engine.isEmpty()) {
@@ -128,7 +117,8 @@ public class Round {
             if (humanDraw.trim().equals(getRequiredEngine())) {
                 engine = humanDraw;
                 //log("Human obtained engine!");
-                currentPlayer = 0;
+                setCurrentPlayer(1);
+
 
                 eIndex = players[0].getHand().getHandTiles().indexOf(engine);
                 players[0].removeTile(eIndex);
@@ -142,7 +132,7 @@ public class Round {
             if (compDraw.trim().equals(getRequiredEngine())) {
                 engine = compDraw;
                 //log("Computer obtained engine!");
-                currentPlayer = 1;
+                setCurrentPlayer(0);
 
                 eIndex = players[1].getHand().getHandTiles().indexOf(engine);
                 if (eIndex >= 0) {
@@ -160,41 +150,6 @@ public class Round {
         return engine;
     }
 
-    public void showGameDetails() {
-        //UI layout
-        System.out.println("_______________________________________");
-        //System.out.println("Tournament Score: " + gameTournament.getTournScore());
-        System.out.println("Round no.: " + getRoundNum());
-        System.out.println();
-
-        System.out.println("Computer: ");
-        System.out.println("	");
-        players[1].getHand().displayHand();
-        System.out.println();
-        System.out.println("	" + "Score: " + players[1].getScore());
-        System.out.println();
-
-        System.out.println("Human: ");
-        System.out.println("	");
-        players[0].getHand().displayHand();
-        System.out.println();
-        System.out.println("	" + "Score: " + players[0].getScore());
-        System.out.println();
-
-        System.out.println("Layout: ");
-        System.out.println("	");
-        gameView.display(layout.getChain());
-        System.out.println();
-
-        System.out.println("Boneyard: ");
-        gameStock.display();
-        System.out.println();
-
-        System.out.println("Previous player passed: " + labelStateValue(isPassed(nextPlayer)));
-        System.out.println("_______________________________________" );
-        System.out.println();
-
-    }
 
     public Player getHumanPlayer()
     {
@@ -216,7 +171,7 @@ public class Round {
         return layout;
     }
 
-    void tiePoints(Player human, Player computer) {
+    public void tiePoints(Player human, Player computer) {
 // sum of points for human
         int sumHuman = 0;
         for (String tile : human.getHandTiles()) {
@@ -247,6 +202,7 @@ public class Round {
         } */
     }
 
+
     public void applyMove(
             Player player,
             Layout layout,
@@ -256,115 +212,50 @@ public class Round {
     ) {
 
 
-        if (move.passed) {
-            //System.out.println(player.returnID() + " passed");
+        if (move == null || move.chosenTile == null || move.passed) {
             return;
         }
 
-        //List<String> tiles = player.getHandTiles();
-
+        // 2. Parse the tile (e.g., "4-5" becomes a=4, b=5)
         int a = move.chosenTile.charAt(0) - '0';
         int b = move.chosenTile.charAt(2) - '0';
+        String tileToPlace = move.chosenTile;
 
         int leftEnd = layout.returnLeft();
         int rightEnd = layout.returnRight();
 
-        boolean isDouble = (a == b);
-
-        boolean prevLeft = layout.returnLeftTile().equals(gameRound.getEngine());
-        boolean prevRight = layout.returnRightTile().equals(gameRound.getEngine());
-
-        // ----- LEFT SIDE -----
-        /*
+        // 3. Placement Logic with Auto-Flipping
         if (move.side == 'L') {
+            // If the right side of our tile matches the left end of the board, we're good.
+            // If the left side matches, we MUST flip it.
+            if (a == leftEnd && a != b) {
+                tileToPlace = b + "-" + a; // Flip it
 
-            if (isDouble) {
-                layout.addLeft(move.chosenTile);
             }
-            else if (b == leftEnd) {
-                layout.addLeft(move.chosenTile);
-            }
-            else if (a == leftEnd) {
-                String flipped = "" + move.chosenTile.charAt(2) + "-" + move.chosenTile.charAt(0);
-
-                System.out.println(player.returnID() + " flipped "
-                        + move.chosenTile + " left to " + flipped);
-
-                layout.addLeft(flipped);
+            layout.addLeft(tileToPlace);
+        } else {
+            // If the left side of our tile matches the right end of the board, we're good.
+            // If the right side matches, we MUST flip it.
+            if (b == rightEnd && a != b) {
+                tileToPlace = b + "-" + a; // Flip it
             }
 
-            if (player.returnID().equals("Human")) {
-                System.out.println(player.returnID()
-                        + " played " + move.chosenTile + " on left side of layout");
-            }
+            this.leftEnd = layout.returnLeft();
+            this.rightEnd = layout.returnRight();
+
+
+            layout.addRight(tileToPlace);
         }
 
-        // ----- RIGHT SIDE -----
-        else if (move.side == 'R') {
+        // 4. Update the internal "Ends" so the next move knows what to match
+        this.leftEnd = layout.returnLeft();
+        this.rightEnd = layout.returnRight();
 
-            if (isDouble) {
-                layout.addRight(move.chosenTile);
-            }
-            else if (a == rightEnd) {
-                layout.addRight(move.chosenTile);
-            }
-            else if (b == rightEnd) {
-                String flipped = "" + move.chosenTile.charAt(2) + "-" + move.chosenTile.charAt(0);
-
-                System.out.println(player.returnID() + " flipped "
-                        + move.chosenTile + " right to " + flipped);
-
-                layout.addRight(flipped);
-            }
-
-            if (player.returnID().equals("Human")) {
-                System.out.println(player.returnID()
-                        + " played " + move.chosenTile + " on right side of layout");
-            }
-        }
-        */
-        // ----- COMPUTER OUTPUT -----
-        if (player.returnID().equals("Computer")) {
-
-            String sideName = (move.side == 'L') ? "left" : "right";
-            String referencePoint;
-
-            /*
-            if (sideName.equals("left")) {
-                referencePoint = prevLeft ? "engine" : "layout";
-            } else {
-                referencePoint = prevRight ? "engine" : "layout";
-            }
-
-            if (move.passed) {
-                System.out.println(player.returnID() + " passed.");
-            }
-            else {
-                System.out.println("The " + player.returnID() + " placed "
-                        + move.chosenTile + " to the " + sideName
-                        + " of the " + referencePoint + ".");
-
-                if (move.chosenTile.charAt(0) == move.chosenTile.charAt(2)) {
-                    //System.out.println("Trying to get rid of doubles as soon as possible");
-                    //System.out.println("Doubles placed left on player's side for purpose of messing their tile streak up");
-                }
-                else {
-                    int totalPipValue = a + b;
-                    System.out.println("The pips on my current tile, "
-                            + move.chosenTile.charAt(0) + " and "
-                            + move.chosenTile.charAt(2)
-                            + ", add up to " + totalPipValue
-                            + ", which is a higher sum value than the other tiles I can play");
-
-                    System.out.println("Continuing to hold tiles with lots of pips would soften the blow if I were to lose; the player gets less points");
-                }
-            }*/
-        }
-
-        //System.out.println();
-
+        // 5. Remove from hand
         int tileIndex = player.getIndexByTile(move.chosenTile);
-        player.removeTile(tileIndex);
+        if (tileIndex != -1) {
+            player.removeTile(tileIndex);
+        }
     }
 
     public void processLine(String line, BufferedReader reader) throws IOException {
@@ -484,86 +375,49 @@ public class Round {
 
 
 
-
-    public int startRound()
+    public void dealTiles()
     {
+        players[0].setTiles(gameStock.dealTiles());
+        players[1].setTiles(gameStock.dealTiles());
+    }
 
-        if(players[0].getHandTiles().isEmpty() && players[1].getHandTiles().isEmpty())
-        {
-            //deal first
-            players[0].setTiles(gameStock.dealTiles());
-            players[1].setTiles(gameStock.dealTiles());
+
+    public void updateMove(Player.Move move)
+    {
+        applyMove(players[currentPlayer], layout, gameStock, this, move);
+    }
+
+        public Player.Move makeMove() {
+        //List<String> logs = new ArrayList<>();
+
+        Player.Move move = players[currentPlayer].takeTurn(gameStock, this, leftEnd, rightEnd);
+
+        return move;
+
+    }
+
+    public String startRound()
+    {
+        if (players[0].getHandTiles().isEmpty() && players[1].getHandTiles().isEmpty()) {
+            dealTiles();
         }
 
+        if (layout.getChain().isEmpty()) {
+            String engineFound = obtainEngine(); // This sets currentPlayer internally
+            layout.addRight(engineFound);
 
-        if(layout.getChain().isEmpty())
-        {
-            //obtain engine and set left and right ends
-            String engine = obtainEngine();
-            layout.addRight(engine);
-            leftEnd = engine.charAt(0) - '0';
-            rightEnd = engine.charAt(2) - '0';
+            // Update the ends so the next move knows what to match
+            leftEnd = engineFound.charAt(0) - '0';
+            rightEnd = engineFound.charAt(2) - '0';
+
+            // CRITICAL: Switch to the NEXT player after the engine is placed
+            //nextPlayer = currentPlayer;
+            //currentPlayer = (currentPlayer + 1) % 2;
+            //setCurrentPlayer(currentPlayer);
+
+            return "Engine " + engineFound + " placed. Next: " + players[currentPlayer].returnID();
         }
-        
-        //loop
-
-        while(!isRoundOver())
-        {
-            //showGameDetails();
-            Player.Move move = players[currentPlayer].takeTurn(gameStock, this, leftEnd, rightEnd);
-
-
-            if(move.choseSave) {
-                return 1;
-            }
-
-            applyMove(players[currentPlayer], layout, gameStock, this, move);
-
-
-            //current player takes turn
-
-            //check if move is pass
-            if (move.passed) {
-                //System.out.println(players[currentPlayer].returnID() + " passes.");
-                setPassed(currentPlayer);
-            } else {
-                //update layout and ends based on move
-                Player.Pips p = players[currentPlayer].parseTile(move.chosenTile);
-                if (move.side == 'L') {
-                    leftEnd = (p.left == leftEnd) ? p.right : p.left;
-                } else {
-                    rightEnd = (p.left == rightEnd) ? p.right : p.left;
-                }
-                //System.out.println(players[currentPlayer].returnID() + " plays " + move.chosenTile + " on the " + (move.side == 'L' ? "left" : "right") + " side.");
-                resetPass(currentPlayer); // reset pass status after a successful play
-            }
-
-            // Check for round end conditions
-            if (players[currentPlayer].getHandTiles().isEmpty()) {
-                //System.out.println(players[currentPlayer].returnID() + " has emptied their hand and wins the round!");
-                setRoundOver();
-            } else if (bothPassed()) {
-                //System.out.println("Both players have passed. The round is blocked.");
-                setRoundOver();
-            }
-
-            // Switch to next player
-            if(!isRoundOver())
-            {
-                currentPlayer = (currentPlayer + 1) % 2;
-
-            }
-        }
-
-        determineRoundWinner(players[currentPlayer], players[nextPlayer]);
-
-        resetStats();
-        //reset for save/load and next round
-
-        //System.out.println("The round has ended ");
-        return 0;
-
-
+        return "Round resumed";
     }
 
     public void resetStats()
@@ -577,7 +431,27 @@ public class Round {
         nextRound();
 
     }
-    void winPoints(Player winner, Player loser) {
+
+    public boolean draw(Player.Move move)
+    {
+        return players[0].handleDraw(move, gameStock, this, leftEnd, rightEnd);
+
+    }
+
+    public boolean pass(Player.Move move)
+    {
+        boolean validPass = players[0].handlePass(move, gameStock);
+
+        final int HUMAN_INDEX = 0;
+
+        if(validPass)
+        {
+            setPassed(HUMAN_INDEX);
+        }
+        return validPass;
+    }
+
+    public void winPoints(Player winner, Player loser) {
         int total = 0;
 
         // sum the pips in loser hand
@@ -604,6 +478,7 @@ public class Round {
         winner.setAddedPoints(total);
     }
 
+
     public int getHumanScore()
     {
         return players[0].getAddedPoints();
@@ -615,7 +490,15 @@ public class Round {
     }
 
 
-
+    public String getHelp(Player.Move move)
+    {
+        String advice = players[1].help(players[0], move, gameStock, this, leftEnd, rightEnd);
+        return advice;
+    }
+    public boolean validate(Player.Move move)
+    {
+        return players[0].checkValidity(move, this, getLayout().returnLeft(), getLayout().returnRight());
+    }
 
     public Player determineRoundWinner(Player human, Player computer) {
 

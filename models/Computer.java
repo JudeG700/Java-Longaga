@@ -98,20 +98,20 @@ public class Computer extends Player {
     }
 
     // Optional: provide recommendations via Android logs
-    public void help(Player player, Move playerMove, Stock gameStock, Round gameRound, int leftEnd, int rightEnd) {
+    // Change 'void' to 'String'
+    public String help(Player player, Player.Move playerMove, Stock gameStock, Round gameRound, int leftEnd, int rightEnd) {
         List<PlayableOption> playableTiles = player.findPlayableTiles(player.getHand(), gameRound, leftEnd, rightEnd);
 
         if (playableTiles.isEmpty()) {
             if (gameStock.getBoneyard().isEmpty()) {
-                Log.i(TAG, "The boneyard is empty and there's no playable tiles. You have to pass.");
+                return "The boneyard is empty. You have to pass.";
             } else {
                 if (playerMove.draw) {
-                    Log.i(TAG, "There's nowhere to place your drawn tile. You have to pass");
+                    return "No place for your drawn tile. You have to pass.";
                 } else {
-                    Log.i(TAG, "No playable tiles. It's best to draw.");
+                    return "No playable tiles. You should draw.";
                 }
             }
-            return;
         }
 
         int bestIndex = -1;
@@ -119,35 +119,63 @@ public class Computer extends Player {
         char bestSide = 'L';
 
         if (playableTiles.size() == 1) {
+
             bestIndex = playableTiles.get(0).index;
+
             bestSide = playableTiles.get(0).side;
+
         } else {
+
             for (PlayableOption option : playableTiles) {
+
                 String tile = player.getTileByIndex(option.index);
+
                 Pips pips = parseTile(tile);
 
+
+
                 int currentScore = scoreTile(
+
                         pips.left,
+
                         pips.right,
+
                         leftEnd,
+
                         rightEnd,
+
                         option.side,
+
                         player.returnID()
+
                 );
 
+
+
                 if (currentScore > bestScore) {
+
                     bestScore = currentScore;
+
                     bestIndex = option.index;
+
                     bestSide = option.side;
+
                 }
+
             }
+
         }
+
+
+
 
         if (bestIndex != -1) {
             String recommendedTile = player.getHand().getTileByIndex(bestIndex);
-            Log.i(TAG, "Recommendation: " + recommendedTile +
-                    " on the " + (bestSide == 'L' ? "left" : "right") + " side");
+            return "Recommendation: " + recommendedTile +
+                    " on the " + (bestSide == 'L' ? "left" : "right") + " side";
         }
+
+        return "No recommendation available.";
     }
 
     // Take a turn

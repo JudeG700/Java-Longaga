@@ -6,6 +6,7 @@ import java.util.List;
 
 public class Human extends Player {
 
+
     private static final String TAG = "Human";
 
     // Constructors
@@ -64,8 +65,49 @@ public class Human extends Player {
         return matchesRight(p, rightEnd) && (isDouble || oppPassed);
     }
 
-    // handleDraw
-    public void handleDraw(Move move, Stock gameStock, Round gameRound, int leftEnd, int rightEnd) {
+
+    public int checkTileFit(String tile, int leftEnd, int rightEnd) {
+
+
+        int a = tile.charAt(0) - '0';
+        int b = tile.charAt(2) - '0';
+
+        boolean fitsLeft = (a == leftEnd || b == leftEnd);
+        boolean fitsRight = (a == rightEnd || b == rightEnd);
+
+        if (fitsLeft && fitsRight) return 3; // BOTH
+        if (fitsLeft) return 1;             // LEFT ONLY
+        if (fitsRight) return 2;            // RIGHT ONLY
+        return 0;                           // NONE
+    }
+
+    public boolean handlePass(Move move, Stock gameStock)
+    {
+        if(move.hasPlayableTiles || !gameStock.getBoneyard().isEmpty())
+        {
+            Log.i(TAG, "You can still play or draw tiles");
+            return false;
+        }
+        move.passed = true;
+        return true;
+    }
+
+
+    public boolean handleDraw(Move move, Stock gameStock, Round gameRound, int leftEnd, int rightEnd) {
+
+        if(gameStock.getBoneyard().isEmpty())
+        {
+            Log.i(TAG, "You have no more tiles to draw ");
+            return false;
+        }
+        List<PlayableOption> playableList = findPlayableTiles(getHand(), gameRound, leftEnd, rightEnd);
+        if (!playableList.isEmpty())
+        {
+            Log.i(TAG, "You still have tiles you can play ");
+            return false;
+        }
+
+
         String drawnTile = gameStock.drawTile();
         addTile(drawnTile);
         Log.i(TAG, returnID() + " drew " + drawnTile);
@@ -75,6 +117,8 @@ public class Human extends Player {
         boolean canRight = canPlayRight(p, rightEnd, gameRound);
 
         move.draw = true;
+
+
 
         // On Android, you'd prompt user to pick side via UI
         if (canLeft && canRight) {
@@ -91,9 +135,33 @@ public class Human extends Player {
             move.draw = false;
             move.passed = true;
         }
+
+        return true;
     }
 
-    // takeTurn - simplified for Android
+    public boolean checkValidity(Move move, Round gameRound, int leftEnd, int rightEnd)
+    {
+
+        Pips p = parseTile(move.chosenTile);
+
+        boolean choiceValid = false;
+
+        if (move.side == 'L') {
+            if (matchesLeft(p, leftEnd)) {
+                choiceValid = true;
+            } else {
+                System.out.println("Invalid left move.");
+            }
+        } else {
+            if (canPlayRight(p, rightEnd, gameRound)) {
+                choiceValid = true;
+            } else {
+                System.out.println("Invalid right move.");
+            }
+        }
+        return choiceValid;
+
+    }
     @Override
     public Move takeTurn(Stock gameStock, Round gameRound, int leftEnd, int rightEnd) {
         Move move = new Move();

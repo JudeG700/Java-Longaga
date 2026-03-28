@@ -58,6 +58,10 @@ public abstract class Player {
         }
     }
 
+    public String help(Player player, Player.Move playerMove, Stock gameStock, Round gameRound, int leftEnd, int rightEnd){return "FUCKANDROID";}
+
+
+
     // Inner class for playable options
     public static class PlayableOption {
         public int index;
@@ -113,6 +117,19 @@ public abstract class Player {
     public boolean hasTile(String targetTile) {
         return hand.hasTile(targetTile);
     }
+
+    public int checkTileFit(String tile, int leftEnd, int rightEnd) {
+        return 0;
+    }
+
+
+
+    public boolean checkValidity(Move move, Round gameRound, int leftEnd, int rightEnd)
+        {return false;}
+
+    public boolean handleDraw(Player.Move move, Stock gameStock, Round round, int l, int r) {return true;}
+
+    public boolean handlePass(Player.Move move, Stock gameStock){return true;}
 
     public void addTile(String tile) {
         hand.addTile(tile);

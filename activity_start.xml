@@ -16,13 +16,13 @@
         android:id="@+id/new_game"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="New Game"/>
+        android:text="New Game" />
 
     <Button
         android:id="@+id/load_game"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Load Game"/>
+        android:text="Load Game" />
 
 </LinearLayout>
 

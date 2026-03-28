@@ -62,10 +62,10 @@ public class Tournament {
         }
 
         // start a round
-        int saveChoice = currentRound.startRound(); // rounds themselves should also be refactored for Android
+        /*int saveChoice = currentRound.startRound(); // rounds themselves should also be refactored for Android
         if (saveChoice == 1) {
             Log.i(TAG, "Save game called - use Context file I/O on Android");
-        }
+        }*/
 
         // add round scores
         addHumanScore(currentRound.getHumanScore());
