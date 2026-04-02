@@ -1,90 +1,220 @@
 package com.example.primaryjavalongaga;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Matrix;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.View;
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
-import com.example.primaryjavalongaga.models.Computer;
-import com.example.primaryjavalongaga.models.Hand;
-import com.example.primaryjavalongaga.models.Human;
-import com.example.primaryjavalongaga.models.Layout;
-import com.example.primaryjavalongaga.models.LayoutView;
-import com.example.primaryjavalongaga.models.Player;
-import com.example.primaryjavalongaga.models.Round;
-import com.example.primaryjavalongaga.models.Stock;
-import com.example.primaryjavalongaga.models.Tournament;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+import com.example.primaryjavalongaga.Controller.models.Hand;
+import com.example.primaryjavalongaga.Controller.models.Layout;
+import com.example.primaryjavalongaga.Controller.models.Player;
+import com.example.primaryjavalongaga.Controller.models.Round;
+import com.example.primaryjavalongaga.Controller.models.Stock;
+import com.example.primaryjavalongaga.Controller.models.Tournament;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Scanner;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 
 public class MainActivity extends AppCompatActivity {
 
     //this executes computer move after human move
 
+    private GameView gameView;
+    private int tournamentScore;
+
+    private GameController controller;
     private Tournament currentTournament;
+
+    int currentPlayer = 0;
     private Round currentRound; // The "Brain"
+
     private Player.Move currentMove = new Player.Move(); // The "Pending Action"
+
+    public void firstTurn()
+    {
+        String announceFirstPlayer = currentRound.startRound();
+        Toast.makeText(this, announceFirstPlayer, Toast.LENGTH_LONG).show();
+
+
+        if(currentRound.getCurrentPlayer() == 1)
+        {
+            compMove();
+
+            currentPlayer = currentRound.getCurrentPlayer();
+            currentPlayer = (currentPlayer + 1) % 2;  // will cycle 0 → 1 → 0
+            currentRound.setCurrentPlayer(currentPlayer);
+            refreshUI();
+
+            currentMove = currentRound.takeTurn();
+        }
+        else
+        {
+            currentMove = currentRound.takeTurn();
+        }
+        refreshUI();
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 1. Setup the Brain
-        currentRound = new Round();
-        currentRound.startRound();
 
-        // 2. Setup the "Side" Buttons ONCE
-        // These just sit there waiting for a tile to be selected first
+        controller = new GameController();
+        currentRound = new Round();
+        currentTournament = new Tournament();
+
+
+        gameView = new GameView(this);
+
+        //option 1
+        int option = getIntent().getIntExtra("LOAD_OPTION", 0);
+
+        //option 2
+        String data = getIntent().getStringExtra("FILE_CONTENT");
+        int resID = getIntent().getIntExtra("FILE_NAME", 0);
+
+
+
+        Intent intent = getIntent();
+
+
+        if(option == 1)
+        {
+            //option 1
+            tournamentScore = intent.getIntExtra("TOURNAMENT_SCORE", 0);
+            currentTournament.setTournScore(tournamentScore);
+        }
+        else if (option == 2 && data != null) {
+
+            loadFromRaw(resID);
+
+        }
+
+        firstTurn();
+
+
+
         findViewById(R.id.leftButton).setOnClickListener(v -> handleSideChoice('L'));
         findViewById(R.id.rightButton).setOnClickListener(v -> handleSideChoice('R'));
+        findViewById(R.id.nextRoundButton).setOnClickListener(v -> startNextRound());
+
 
         //3. Additionally set up the other buttons as well
         findViewById(R.id.drawButton).setOnClickListener(v -> handleDraw());
         findViewById(R.id.passButton).setOnClickListener(v -> handlePass());
         findViewById(R.id.helpButton).setOnClickListener(v -> handleHelp());
+        findViewById(R.id.saveButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+                findViewById(R.id.editSaveFileName).setVisibility(View.VISIBLE);
+
+                EditText input = findViewById(R.id.editSaveFileName);
+
+
+                String textInside = input.getText().toString().trim();
+
+                if (textInside.isEmpty()) {
+                    input.setError("Please enter the name of your save file");
+                    return;
+                }
+
+                initSave(textInside);
+
+        }
+        });
+
+
+        findViewById(R.id.doneButton).setOnClickListener(v -> switchTurn());
+
+        findViewById(R.id.editSaveFileName).setVisibility(View.GONE);
+        findViewById(R.id.nextRoundButton).setVisibility(View.GONE);
+        findViewById(R.id.doneButton).setVisibility(View.GONE);
+
+        findViewById(R.id.nextRoundButton).setOnClickListener(v -> {
+            currentMove = null;
+            refreshUI();
+            startNextRound();
+            findViewById(R.id.nextRoundButton).setVisibility(View.GONE);
+
+        });
         // 4. Draw the initial board
-        refreshUI();
-        currentRound.makeMove();
+
+        //otherwise we will wait for the event listener
 
     }
+    public void compMove()
+    {
+        currentMove = currentRound.takeTurn();
+        applyMove(currentMove);
+    }
 
+    // Inside your Activity
+    public void loadFromRaw(int resourceId) {
+        try {
+            InputStream is = getResources().openRawResource(resourceId);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+
+            // Hand the open reader to your logic class
+            boolean success = currentTournament.loadGameState(reader, currentRound);
+
+            if (success) {
+                Toast.makeText(this, "Game Loaded!", Toast.LENGTH_SHORT).show();
+            }
+            is.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+// You would call it like this:
+// loadFromRaw(R.raw.case1);
+
+    private void applyMove(Player.Move move)
+    {
+        currentRound.applyMove(move);
+        findViewById(R.id.doneButton).setVisibility(View.VISIBLE);
+        checkForRoundWinner();
+
+    }
     private void handlePass()
     {
         boolean validPass = currentRound.pass(currentMove);
 
         if(!validPass)
         {
-            refreshUI();
+            //refreshUI();
             return;
         }
 
-        currentRound.setCurrentPlayer(1);
-        Player.Move compMove = currentRound.makeMove();
-        if (compMove != null && !compMove.passed) {
-            currentRound.updateMove(compMove);
-        }
+        //applyMove will mark opponent as passed
+        applyMove(currentMove);
 
-        // 4. Reset for next Human turn
-        currentRound.setCurrentPlayer(0);
-        currentMove = new Player.Move(); // Clear the selection
         refreshUI();
-
-
 
     }
 
@@ -92,10 +222,21 @@ public class MainActivity extends AppCompatActivity {
     {
         String advice = currentRound.getHelp(currentMove);
         // 2. Show it to the user
-        Toast.makeText(this, advice, Toast.LENGTH_LONG).show();
+        new AlertDialog.Builder(this)
+                .setTitle("Tip")
+                .setMessage(advice)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    dialog.dismiss(); // closes when OK is pressed
+                })
+                .show();
+        //Toast.makeText(this, advice, Toast.LENGTH_LONG).show();
 
+        //gameView.refreshUI(currentRound);
         refreshUI();
+
     }
+
+
 
     private void handleDraw()
     {
@@ -119,10 +260,16 @@ public class MainActivity extends AppCompatActivity {
             }
             else
             {
-                currentRound.updateMove(currentMove);
+                applyMove(currentMove);
             }
         }
+
+
         refreshUI();
+
+        findViewById(R.id.doneButton).setVisibility(View.VISIBLE);
+
+
 
     }
 
@@ -131,6 +278,9 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Select a tile first!", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        // STEP 2: Show the L/R buttons. NO AUTO-PLAY.
+        findViewById(R.id.sideButtonsContainer).setVisibility(View.VISIBLE);
 
         // 1. Assign the side
         currentMove.side = side;
@@ -145,29 +295,46 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // 2. Human plays
-        currentRound.updateMove(currentMove);
-
-
-        determineRoundWinner(); // <--- Check after Human moves
-
-        // 3. IMMEDIATELY switch to Computer
-        currentRound.setCurrentPlayer(1);
-        Player.Move compMove = currentRound.makeMove();
-        if (compMove != null && !compMove.passed) {
-            currentRound.updateMove(compMove);
-        }
-
-        determineRoundWinner(); // <--- Check after Computer moves as well
-
-        // 4. Reset for next Human turn
-        currentRound.setCurrentPlayer(0);
-        currentMove = new Player.Move(); // Clear the selection
-        findViewById(R.id.sideButtonsContainer).setVisibility(View.GONE);
-
+        applyMove(currentMove);
 
         refreshUI(); // Draw the new state for both players
+        findViewById(R.id.sideButtonsContainer).setVisibility(View.GONE);
+        findViewById(R.id.doneButton).setVisibility(View.VISIBLE);
+
+        //switchTurn();
+
     }
 
+
+    private void switchTurn()
+    {
+        findViewById(R.id.doneButton).setVisibility(View.GONE);
+
+        checkForRoundWinner();
+
+
+        //computer turn
+        currentPlayer = currentRound.getCurrentPlayer();
+        currentPlayer = (currentPlayer + 1) % 2;  // will cycle 0 → 1 → 0
+        currentRound.resetPass(currentPlayer);
+        currentRound.setCurrentPlayer(currentPlayer);
+        refreshUI();
+
+        currentMove = currentRound.takeTurn();
+        currentRound.applyMove(currentMove);
+        checkForRoundWinner();
+
+        //human turn
+
+        currentPlayer = (currentPlayer + 1) % 2;  // will cycle 0 → 1 → 0
+        currentRound.setCurrentPlayer(currentPlayer);
+        currentRound.resetPass(currentPlayer);
+        refreshUI();
+        currentMove = currentRound.takeTurn();
+
+
+
+    }
     private void refreshUI() {
         LinearLayout humHand = findViewById(R.id.humanHand);
         LinearLayout compHand = findViewById(R.id.computerHand);
@@ -180,42 +347,41 @@ public class MainActivity extends AppCompatActivity {
         boneyard.removeAllViews();
 
 
-
         TextView scoreView = findViewById(R.id.scoreText);
         TextView statusView = findViewById(R.id.statusText);
 
-        // 1. SET THE SCORE
-        // Pulling directly from your Round methods
-        int hScore = currentRound.getHumanScore();
-        int cScore = currentRound.getComputerScore();
-        scoreView.setText("Score - Human: " + hScore + " | Computer: " + cScore);
+        TextView tournScoreView = findViewById(R.id.tournScoreText);
+        tournScoreView.setText("Required Tournament Score: " + currentTournament.getTournScore());
+
+        int hScore = currentRound.getHumanPlayer().getScore();
+        int cScore = currentRound.getComputerPlayer().getScore();
+        scoreView.setText("Human score: " + hScore + " | Computer score: " + cScore);
 
         // 2. SET THE PASS STATUS
         // We check the 'passed' array in your Round class
         StringBuilder status = new StringBuilder();
 
         if (currentRound.isPassed(0)) {
-            status.append("Human PASSED. ");
+            status.append("Human Passed! ");
         }
         if (currentRound.isPassed(1)) {
-            status.append("Computer PASSED. ");
+            status.append("Computer Passed! ");
         }
 
         if (status.length() == 0) {
-            status.append("Game in progress...");
+            status.append("No passes yet");
         }
 
         statusView.setText(status.toString());
 
-
         // Draw Human Hand (Clickable)
         for (String tile : currentRound.getHumanPlayer().getHandTiles()) {
             TextView tv = createTileView(tile);
+            tv.setTextSize(12); // try 10–14 range
             tv.setOnClickListener(v -> {
                 // STEP 1: Just record what was clicked
                 currentMove.chosenTile = tile;
 
-                // STEP 2: Show the L/R buttons. NO AUTO-PLAY.
                 findViewById(R.id.sideButtonsContainer).setVisibility(View.VISIBLE);
 
                 // STEP 3: Optional - highlight the selected tile so you know it's active
@@ -227,19 +393,24 @@ public class MainActivity extends AppCompatActivity {
         // Draw Computer Hand (NOT Clickable - use a placeholder or the tile string)
         for (String tile : currentRound.getComputerPlayer().getHandTiles()) {
             TextView tv = createTileView(tile);
+            tv.setTextSize(12); // try 10–14 range
             compHand.addView(tv); // Or tile if you want to see them
         }
 
         // Draw Board (Layout)
         for (String tile : currentRound.getLayout().getChain()) {
             TextView tv = createTileView(tile);
+            tv.setTextSize(12); // try 10–14 range
             board.addView(tv);
         }
 
         for (String tile : currentRound.getGameStock().getBoneyard()) {
             TextView tv = createTileView(tile);
+            tv.setTextSize(12); // try 10–14 range
             boneyard.addView(tv);
         }
+
+
    }
 
 
@@ -290,6 +461,7 @@ public class MainActivity extends AppCompatActivity {
     }
 */
 
+
     private TextView createTileView(String tile) {
         TextView tv = new TextView(this);
         tv.setText(tile);
@@ -298,7 +470,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void determineRoundWinner() {
+    private void checkForRoundWinner() {
         // 1. Check the flags from your Round class
         if (currentRound.getHumanPlayer().getHandTiles().isEmpty()) {
             Toast.makeText(this, "Human wins the round!", Toast.LENGTH_LONG).show();
@@ -310,14 +482,73 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Game Blocked! It's a tie.", Toast.LENGTH_LONG).show();
             currentRound.tiePoints(currentRound.getHumanPlayer(), currentRound.getComputerPlayer());
             }
+        else
+        {
+            refreshUI();
+            return;
+        }
+
+
+        addScores();
+        refreshUI();
 
         checkTournamentWinner();
         endRound();
     }
 
+    public void addScores()
+    {
+        currentTournament.setHumanScore(currentRound.getHumanPlayer().getScore());
+        currentTournament.setComputerScore(currentRound.getComputerPlayer().getScore());
+    }
+
     private void checkTournamentWinner()
     {
-        currentTournament.determineTournamentWinner();
+
+        String winner = currentTournament.determineTournamentWinner();
+        Toast.makeText(this, winner, Toast.LENGTH_LONG).show();
+
+        Intent intent = new Intent(this, TournamentWinnerActivity.class);
+
+
+        int winnerScore = 0;
+
+        if(winner.equals("human"))
+        {
+            winnerScore = currentRound.getHumanPlayer().getScore();
+            intent.putExtra("PLAYER_NAME", winner);
+            intent.putExtra("TOURNAMENT_SCORE", winnerScore);
+            startActivity(intent);
+
+        }
+        else if(winner.equals("computer"))
+        {
+
+            winnerScore = currentRound.getComputerPlayer().getScore();
+            intent.putExtra("PLAYER_NAME", winner);
+            intent.putExtra("TOURNAMENT_SCORE", winnerScore);
+            startActivity(intent);
+
+        }
+
+
+
+
+    }
+
+    private void startNextRound()
+    {
+
+        findViewById(R.id.leftButton).setEnabled(true);
+        findViewById(R.id.rightButton).setEnabled(true);
+        findViewById(R.id.drawButton).setEnabled(true);
+        findViewById(R.id.passButton).setEnabled(true);
+        findViewById(R.id.helpButton).setEnabled(true);
+        currentRound.resetStats();
+        currentRound.nextRound();
+        refreshUI();
+        firstTurn();
+
     }
     private void endRound() {
 
@@ -332,19 +563,19 @@ public class MainActivity extends AppCompatActivity {
         // Show a "Next Round" button (you'll need to add this to your XML)
         Button nextBtn = findViewById(R.id.nextRoundButton);
         nextBtn.setVisibility(View.VISIBLE);
-        nextBtn.setOnClickListener(v -> {
-            currentRound.resetStats(); // This calls your reset logic
-            currentRound.startRound(); // Sets up the new engine
-            refreshUI();
-            nextBtn.setVisibility(View.GONE);
-            findViewById(R.id.leftButton).setEnabled(true);
-            findViewById(R.id.rightButton).setEnabled(true);
-            findViewById(R.id.drawButton).setEnabled(true);
-            findViewById(R.id.passButton).setEnabled(true);
-            findViewById(R.id.helpButton).setEnabled(true);
 
-        });
     }
+
+
+    public void initSave(String fileName)
+    {
+
+        currentTournament.initSave(currentRound.getHumanPlayer().getHand(), currentRound.getComputerPlayer().getHand(), currentRound.getGameStock(), currentRound.getLayout(), currentRound, fileName);
+        ActivityCompat.finishAffinity(this); //
+
+    }
+
+
 
 
 }

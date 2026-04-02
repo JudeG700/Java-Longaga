@@ -7,6 +7,7 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+
 // 1. "extends" makes this a real Android Screen
 public class StartStateActivity extends AppCompatActivity {
 
@@ -34,7 +35,6 @@ public class StartStateActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(StartStateActivity.this, TournamentScoreActivity.class);
-                //intent.putExtra("PLAYER_CHOICE", 1);
                 startActivity(intent);
             }
         });
@@ -43,8 +43,7 @@ public class StartStateActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // This is the "Bridge" to the next screen
-                Intent intent = new Intent(StartStateActivity.this, MainActivity.class);
-                intent.putExtra("PLAYER_CHOICE", 2);
+                Intent intent = new Intent(StartStateActivity.this, LoadGame.class);
                 startActivity(intent);
             }
         });

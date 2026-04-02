@@ -8,6 +8,9 @@ import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+
+
+
 public class TournamentScoreActivity extends AppCompatActivity {
 
     @Override
@@ -33,7 +36,9 @@ public class TournamentScoreActivity extends AppCompatActivity {
                 int tournamentScore = Integer.parseInt(textInside);
 
                 Intent intent = new Intent(TournamentScoreActivity.this, MainActivity.class);
+                intent.putExtra("LOAD_OPTION", 1);
                 intent.putExtra("TOURNAMENT_SCORE", tournamentScore);
+
                 startActivity(intent);
             }
         });
