@@ -9,82 +9,68 @@
     tools:context=".MainActivity">
 
 
-    <TextView
-        android:id="@+id/gameLogTextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#000000"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
-
-
     <LinearLayout
-        android:id="@+id/boneyard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="76dp"
-        android:clipChildren="false"
-        android:clipToPadding="false"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:clipChildren="false"
-        android:clipToPadding="false"
-        android:id="@+id/layout"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="304dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:clipChildren="false"
-        android:clipToPadding="false"
         android:id="@+id/humanHand"
-        android:layout_width="0dp"
+        android:layout_width="411dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="440dp"
+        android:layout_marginTop="40dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/textView2">
 
         <!-- Dominoes will be added here dynamically -->
     </LinearLayout>
 
     <LinearLayout
-        android:clipChildren="false"
-        android:clipToPadding="false"
         android:id="@+id/computerHand"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="156dp"
+        android:layout_marginTop="208dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/boneyard"
+        app:layout_constraintTop_toTopOf="parent">
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/layout"
+        android:layout_width="411dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="96dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/boneyard"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/computerHand">
+
     </LinearLayout>
 
-
+    <LinearLayout
+        android:id="@+id/boneyard"
+        android:layout_width="411dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView3" />
 
     <Button
         android:id="@+id/drawButton"
@@ -130,15 +116,28 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/saveButton" />
 
+
     <Button
         android:id="@+id/nextRoundButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="160dp"
-        android:text="Help"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="parent" />
+        android:layout_marginTop="80dp"
+        android:text="Next Round"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layout"
+        tools:ignore="MissingConstraints" />
+
+    <Button
+        android:id="@+id/doneButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Done"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/boneyard" />
 
     <LinearLayout
         android:id="@+id/sideButtonsContainer"
@@ -160,6 +159,8 @@
             android:layout_height="wrap_content"
             android:id="@+id/rightButton"
             android:text="Right" />
+
+
     </LinearLayout>
 
 
@@ -167,29 +168,91 @@
         android:id="@+id/scoreText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/boneyard"
-        app:layout_constraintStart_toEndOf="@+id/passButton"
-
         android:text="Score - Human: 0 | Computer: 0"
         android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline" />
+
+
+    <TextView
+        android:id="@+id/tournScoreText"
+        android:layout_width="230dp"
+        android:layout_height="22dp"
+        android:layout_marginTop="32dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:text="Required Tournament Score: "
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scoreText" />
 
     <TextView
         android:id="@+id/statusText"
+        android:layout_width="140dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="76dp"
+        android:layout_marginTop="40dp"
+        android:text=""
+        android:textColor="@color/black"
+        app:layout_constraintStart_toStartOf="@+id/computerHand"
+        app:layout_constraintTop_toTopOf="@+id/computerHand" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <EditText
+        android:id="@+id/editSaveFileName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="96dp"
+        android:background="@drawable/edittext_border"
+        android:hint="Enter name for save file (e.g., game1.txt)"
+        android:inputType="text"
+        android:padding="12dp"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/computerHand" />
+
+    <TextView
+        android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/computerHand"
-        app:layout_constraintStart_toStartOf="@+id/passButton"
-        android:text="Status: Your Turn"
-        android:textColor="#FF0000" />
+        android:layout_marginBottom="20dp"
+        android:text="COMPUTER"
+        app:layout_constraintBottom_toTopOf="@+id/computerHand"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.504"
+        app:layout_constraintStart_toStartOf="parent" />
 
-
-    <androidx.constraintlayout.widget.Guideline
+    <TextView
+        android:id="@+id/textView2"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:text="HUMAN"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/nextRoundButton" />
 
-    <androidx.constraintlayout.widget.Guideline
+    <TextView
+        android:id="@+id/textView3"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="BONEYARD"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/saveButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
