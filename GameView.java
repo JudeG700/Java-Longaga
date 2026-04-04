@@ -45,7 +45,7 @@ public class GameView {
         boneyard.removeAllViews();
 
         TextView scoreView = activity.findViewById(R.id.scoreText);
-        TextView statusView = activity.findViewById(R.id.statusText);
+        //TextView statusView = activity.findViewById(R.id.statusText);
 
         // Score
         int hScore = currentRound.getHumanScore();
@@ -66,7 +66,7 @@ public class GameView {
             status.append("Game in progress...");
         }
 
-        statusView.setText(status.toString());
+        //statusView.setText(status.toString());
 
         // Draw hands + board
         drawTiles(humHand, currentRound.getHumanPlayer().getHandTiles());

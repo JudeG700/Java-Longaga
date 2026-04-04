@@ -7,6 +7,7 @@ import androidx.core.app.ActivityCompat;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -89,28 +90,46 @@ public class Tournament {
 
     }
 
+    //I TOOK THIS FROM GEEKS FOR GEEKS
+    /*private void writeTextData(File file, bufferedWriter data) {
+        FileOutputStream fileOutputStream = null;
+        try {
+            fileOutputStream = new FileOutputStream(file);
+            fileOutputStream.write(data.getBytes());
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (fileOutputStream != null) {
+                try {
+                    fileOutputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    } */
 
-    public void saveGameState(String filename, Hand humanHand, Hand computerHand, Stock gameStock, Layout layout, Round currentRound) {
+    public void saveGameState(File saveFolder, File saveFile, Hand humanHand, Hand computerHand, Stock gameStock, Layout layout, Round currentRound) {
+        // 1. Make sure the folder exists
+        if (!saveFolder.exists()) saveFolder.mkdirs();
 
-        try (BufferedWriter outFile = new BufferedWriter(new FileWriter(filename))) {
+        // 2. Write everything to the file
+        try (BufferedWriter outFile = new BufferedWriter(new FileWriter(saveFile))) {
 
             outFile.write("Tournament Score: " + getTournScore() + "\n");
             outFile.write("Round No.: " + currentRound.getRoundNum() + "\n\n");
 
-            outFile.write("Computer:\n");
-            outFile.write("   Hand: ");
+            outFile.write("Computer:\n   Hand: ");
             for (String tile : computerHand.getHandTiles())
                 outFile.write(tile + " ");
             outFile.write("\n   Score: " + getComputerScore() + "\n\n");
 
-            outFile.write("Human:\n");
-            outFile.write("   Hand: ");
+            outFile.write("Human:\n   Hand: ");
             for (String tile : humanHand.getHandTiles())
                 outFile.write(tile + " ");
             outFile.write("\n   Score: " + getHumanScore() + "\n\n");
 
-            outFile.write("Layout:\n");
-            outFile.write("  L ");
+            outFile.write("Layout:\n  L ");
             for (String tile : layout.getChain())
                 outFile.write(tile + " ");
             outFile.write("R\n\n");
@@ -120,19 +139,23 @@ public class Tournament {
                 outFile.write(tile + " ");
             outFile.write("\n\n");
 
-            outFile.write("Previous Player Passed: " +
-                    (currentRound.isPassed(currentRound.getCurrentPlayer()) ? "Yes" : "No") + "\n\n");
+            String passed = currentRound.isPassed(currentRound.getCurrentPlayer()) ? "Yes" : "No";
+            outFile.write("Previous Player Passed: " + passed + "\n\n");
 
             outFile.write("Next Player: " +
-                    (currentRound.getNextPlayer() == 1 ? "Computer" : "Human") + "\n");
+                    (currentRound.getCurrentPlayer() == 1 ? "Computer" : "Human") + "\n");
 
-            System.out.println("Game saved to " + filename);
+            outFile.flush(); // force write
+
+            // ✅ Log the actual saved file path
+            System.out.println("SUCCESS! Saved to: " + saveFile.getAbsolutePath());
 
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e("SAVE_ERROR", "Could not save file", e);
         }
-        return;
     }
+
+
 
 
     public boolean loadGameState(BufferedReader reader, Round currentRound) {
@@ -206,10 +229,10 @@ public class Tournament {
 
 
 
-    public void initSave(Hand humanHand, Hand computerHand, Stock gameStock, Layout layout, Round currentRound, String fileName) {
+    public void initSave(File saveFolder, File saveFile, Hand humanHand, Hand computerHand, Stock gameStock, Layout layout, Round currentRound) {
 
 
-        saveGameState(fileName, humanHand, computerHand, gameStock, layout, currentRound);
+        saveGameState(saveFolder, saveFile, humanHand, computerHand, gameStock, layout, currentRound);
     }
 
 }

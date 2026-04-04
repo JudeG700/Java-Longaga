@@ -1,9 +1,11 @@
 package com.example.primaryjavalongaga;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,14 +23,15 @@ import com.example.primaryjavalongaga.Controller.models.Stock;
 import com.example.primaryjavalongaga.Controller.models.Tournament;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.Scanner;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -43,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private GameView gameView;
     private int tournamentScore;
 
+    private TextView lastSelectedTileView;
     private GameController controller;
     private Tournament currentTournament;
 
@@ -59,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
 
         if(currentRound.getCurrentPlayer() == 1)
         {
+            currentRound.setNextPlayer(currentPlayer);
+
             compMove();
 
             currentPlayer = currentRound.getCurrentPlayer();
@@ -70,6 +76,8 @@ public class MainActivity extends AppCompatActivity {
         }
         else
         {
+            int nextPlayer = ((currentPlayer + 1) % 2);
+            currentRound.setNextPlayer(nextPlayer);
             currentMove = currentRound.takeTurn();
         }
         refreshUI();
@@ -108,9 +116,11 @@ public class MainActivity extends AppCompatActivity {
             tournamentScore = intent.getIntExtra("TOURNAMENT_SCORE", 0);
             currentTournament.setTournScore(tournamentScore);
         }
-        else if (option == 2 && data != null) {
+        else if (option == 2 &&  getIntent().hasExtra("FILE_CONTENT")) {
 
-            loadFromRaw(resID);
+            String fileContent = getIntent().getStringExtra("FILE_CONTENT");
+            loadFile(fileContent);
+
 
         }
 
@@ -132,24 +142,31 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 findViewById(R.id.editSaveFileName).setVisibility(View.VISIBLE);
+                findViewById(R.id.enterSave).setVisibility(View.VISIBLE);
 
-                EditText input = findViewById(R.id.editSaveFileName);
+                Button saveGameButton = findViewById(R.id.enterSave);
+                saveGameButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        EditText input = findViewById(R.id.editSaveFileName);
 
+                        String fileName = input.getText().toString().trim();
 
-                String textInside = input.getText().toString().trim();
+                        if (fileName.isEmpty()) {
+                            input.setError("Enter a tournament score");
+                            return;
+                        }
 
-                if (textInside.isEmpty()) {
-                    input.setError("Please enter the name of your save file");
-                    return;
-                }
-
-                initSave(textInside);
+                        initSave(fileName);
+                    }
+                });
 
         }
         });
 
 
         findViewById(R.id.doneButton).setOnClickListener(v -> switchTurn());
+        findViewById(R.id.enterSave).setVisibility(View.GONE);
 
         findViewById(R.id.editSaveFileName).setVisibility(View.GONE);
         findViewById(R.id.nextRoundButton).setVisibility(View.GONE);
@@ -173,24 +190,38 @@ public class MainActivity extends AppCompatActivity {
         applyMove(currentMove);
     }
 
-    // Inside your Activity
-    public void loadFromRaw(int resourceId) {
-        try {
-            InputStream is = getResources().openRawResource(resourceId);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
-            // Hand the open reader to your logic class
+    public void loadFile(String content) {
+        try (BufferedReader reader = new BufferedReader(new StringReader(content))) {
             boolean success = currentTournament.loadGameState(reader, currentRound);
-
             if (success) {
                 Toast.makeText(this, "Game Loaded!", Toast.LENGTH_SHORT).show();
             }
-            is.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /*
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        String fileContent = intent.getStringExtra("FILE_CONTENT");
+        if (fileContent != null) {
+            // You can parse saved .txt files directly
+            try (BufferedReader reader = new BufferedReader(new StringReader(fileContent))) {
+                boolean success = currentTournament.loadGameState(reader, currentRound);
+                if (success) {
+                    Toast.makeText(this, "Game Loaded!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Failed to parse saved file.", Toast.LENGTH_SHORT).show();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    } */
 // You would call it like this:
 // loadFromRaw(R.raw.case1);
 
@@ -198,20 +229,18 @@ public class MainActivity extends AppCompatActivity {
     {
         currentRound.applyMove(move);
         findViewById(R.id.doneButton).setVisibility(View.VISIBLE);
-        checkForRoundWinner();
 
     }
     private void handlePass()
     {
-        boolean validPass = currentRound.pass(currentMove);
+        String passText = currentRound.pass(currentMove);
 
-        if(!validPass)
+        if(!passText.equals(" "))
         {
-            //refreshUI();
+            Toast.makeText(this, passText, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        //applyMove will mark opponent as passed
         applyMove(currentMove);
 
         refreshUI();
@@ -241,13 +270,13 @@ public class MainActivity extends AppCompatActivity {
     private void handleDraw()
     {
 
-        boolean validDraw = currentRound.draw(currentMove);
-        if(!validDraw)
+        String drawText = currentRound.draw(currentMove);
+        if((!drawText.equals(" ")) && (!drawText.equals("unplayable")))
         {
+            Toast.makeText(this, drawText, Toast.LENGTH_SHORT).show();
             return;
         }
-
-        if(!currentMove.draw)
+        else if(drawText.equals("unplayable"))
         {
             Toast.makeText(this, "Unable to play drawn tile. Passing", Toast.LENGTH_SHORT).show();
             handlePass();
@@ -306,29 +335,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void nextTurn()
+    {
+        currentRound.nextTurn();
+    }
+
     private void switchTurn()
     {
         findViewById(R.id.doneButton).setVisibility(View.GONE);
-
         checkForRoundWinner();
 
 
         //computer turn
-        currentPlayer = currentRound.getCurrentPlayer();
-        currentPlayer = (currentPlayer + 1) % 2;  // will cycle 0 → 1 → 0
-        currentRound.resetPass(currentPlayer);
-        currentRound.setCurrentPlayer(currentPlayer);
+        nextTurn();
         refreshUI();
-
         currentMove = currentRound.takeTurn();
         currentRound.applyMove(currentMove);
         checkForRoundWinner();
 
         //human turn
-
-        currentPlayer = (currentPlayer + 1) % 2;  // will cycle 0 → 1 → 0
-        currentRound.setCurrentPlayer(currentPlayer);
-        currentRound.resetPass(currentPlayer);
+        nextTurn();
         refreshUI();
         currentMove = currentRound.takeTurn();
 
@@ -346,6 +372,53 @@ public class MainActivity extends AppCompatActivity {
         board.removeAllViews();
         boneyard.removeAllViews();
 
+        // Draw Computer Hand (NOT Clickable - use a placeholder or the tile string)
+        for (String tile : currentRound.getComputerPlayer().getHandTiles()) {
+            View iv = createTileView(tile);
+            compHand.addView(iv); // Or tile if you want to see them
+        }
+
+
+        // Draw Board (Layout)
+        for (String tile : currentRound.getLayout().getChain()) {
+            View iv = createTileView(tile);
+            board.addView(iv);
+        }
+
+
+        // Draw Human Hand (Clickable)
+        for (String tile : currentRound.getHumanPlayer().getHandTiles()) {
+            final TextView iv = createTileView(tile);
+            //tv.setTextSize(12); // try 10–14 range
+            iv.setOnClickListener(v -> {
+
+                if (lastSelectedTileView != null) {
+                    lastSelectedTileView.setBackgroundColor(Color.TRANSPARENT);
+                    lastSelectedTileView.setTextColor(Color.BLACK);
+                }
+
+                // STEP 2: Highlight the CURRENTLY clicked tile
+                iv.setBackgroundColor(Color.BLUE);
+                iv.setTextColor(Color.WHITE);
+
+                // STEP 3: Update the Controller's memory
+                lastSelectedTileView = iv;
+
+                currentMove.chosenTile = tile;
+
+                findViewById(R.id.sideButtonsContainer).setVisibility(View.VISIBLE);
+
+                // STEP 3: Optional - highlight the selected tile so you know it's active
+                //iv.setBackgroundColor(android.graphics.Color.YELLOW);
+            });
+            humHand.addView(iv);
+        }
+
+
+        for (String tile : currentRound.getGameStock().getBoneyard()) {
+            View iv = createTileView(tile);
+            boneyard.addView(iv);
+        }
 
         TextView scoreView = findViewById(R.id.scoreText);
         TextView statusView = findViewById(R.id.statusText);
@@ -357,6 +430,11 @@ public class MainActivity extends AppCompatActivity {
         int cScore = currentRound.getComputerPlayer().getScore();
         scoreView.setText("Human score: " + hScore + " | Computer score: " + cScore);
 
+        TextView roundText = findViewById(R.id.roundNumber);
+        roundText.setText("Round No.:" + currentRound.getRoundNum());
+
+        TextView nextPlayerText = findViewById(R.id.nextPlayer);
+        nextPlayerText.setText("Next Player:" + currentRound.getPlayerByIndex(currentRound.getNextPlayer()).returnID());
         // 2. SET THE PASS STATUS
         // We check the 'passed' array in your Round class
         StringBuilder status = new StringBuilder();
@@ -374,42 +452,6 @@ public class MainActivity extends AppCompatActivity {
 
         statusView.setText(status.toString());
 
-        // Draw Human Hand (Clickable)
-        for (String tile : currentRound.getHumanPlayer().getHandTiles()) {
-            TextView tv = createTileView(tile);
-            tv.setTextSize(12); // try 10–14 range
-            tv.setOnClickListener(v -> {
-                // STEP 1: Just record what was clicked
-                currentMove.chosenTile = tile;
-
-                findViewById(R.id.sideButtonsContainer).setVisibility(View.VISIBLE);
-
-                // STEP 3: Optional - highlight the selected tile so you know it's active
-                //iv.setBackgroundColor(android.graphics.Color.YELLOW);
-            });
-            humHand.addView(tv);
-        }
-
-        // Draw Computer Hand (NOT Clickable - use a placeholder or the tile string)
-        for (String tile : currentRound.getComputerPlayer().getHandTiles()) {
-            TextView tv = createTileView(tile);
-            tv.setTextSize(12); // try 10–14 range
-            compHand.addView(tv); // Or tile if you want to see them
-        }
-
-        // Draw Board (Layout)
-        for (String tile : currentRound.getLayout().getChain()) {
-            TextView tv = createTileView(tile);
-            tv.setTextSize(12); // try 10–14 range
-            board.addView(tv);
-        }
-
-        for (String tile : currentRound.getGameStock().getBoneyard()) {
-            TextView tv = createTileView(tile);
-            tv.setTextSize(12); // try 10–14 range
-            boneyard.addView(tv);
-        }
-
 
    }
 
@@ -418,8 +460,8 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    /*
-    private View createTileView(String tile, boolean isLeft) { // Added a 'side' check
+/*
+    private View createTileView(String tile) { // Added a 'side' check
         ImageView iv = new ImageView(this);
         String trimmed = tile.trim();
         int a = trimmed.charAt(0) - '0';
@@ -437,17 +479,17 @@ public class MainActivity extends AppCompatActivity {
 
             if (a == b) {
                 // DOUBLE: Tall Box, No Rotation
-                iv.setLayoutParams(new LinearLayout.LayoutParams((int)(44 * density), (int)(88 * density)));
+                iv.setLayoutParams(new LinearLayout.LayoutParams((int)(22 * density), (int)(44 * density)));
             } else {
                 // NORMAL: Wide Box, Rotate 90
-                iv.setLayoutParams(new LinearLayout.LayoutParams((int)(88 * density), (int)(44 * density)));
+                iv.setLayoutParams(new LinearLayout.LayoutParams((int)(22 * density), (int)(44 * density)));
                 iv.setRotation(90); // The "Simple" Way
 
                 // 2. THE FLIP LOGIC
                 // If we are playing on the LEFT, and 'a' is what matches the board,
                 // we need to spin it 180 more degrees to put 'b' on the outside.
                 int boardLeft = currentRound.getLayout().returnLeft();
-                if (isLeft && a == boardLeft) {
+                /*if (isLeft && a == boardLeft) {
                     iv.setRotation(270); // 90 + 180
                 }
                 // If we are playing on the RIGHT, and 'b' is what matches the board...
@@ -456,32 +498,39 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        //iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
         return iv;
     }
-*/
+    */
+
+
 
 
     private TextView createTileView(String tile) {
         TextView tv = new TextView(this);
         tv.setText(tile);
-        tv.setPadding(20, 20, 20, 20);
+        tv.setPadding(2, 2, 2, 2);
         return tv;
     }
 
 
     private void checkForRoundWinner() {
+        String winText = "";
         // 1. Check the flags from your Round class
         if (currentRound.getHumanPlayer().getHandTiles().isEmpty()) {
             Toast.makeText(this, "Human wins the round!", Toast.LENGTH_LONG).show();
-            currentRound.winPoints(currentRound.getHumanPlayer(), currentRound.getComputerPlayer());
+            winText = currentRound.winPoints(currentRound.getHumanPlayer(), currentRound.getComputerPlayer());
+            Toast.makeText(this, winText, Toast.LENGTH_LONG).show();
         } else if (currentRound.getComputerPlayer().getHandTiles().isEmpty()) {
             Toast.makeText(this, "Computer wins the round!", Toast.LENGTH_LONG).show();
-            currentRound.winPoints(currentRound.getComputerPlayer(), currentRound.getHumanPlayer());
+            winText = currentRound.winPoints(currentRound.getComputerPlayer(), currentRound.getHumanPlayer());
+            Toast.makeText(this, winText, Toast.LENGTH_LONG).show();
         } else if (currentRound.bothPassed() && currentRound.getGameStock().getBoneyard().isEmpty()) {
             Toast.makeText(this, "Game Blocked! It's a tie.", Toast.LENGTH_LONG).show();
-            currentRound.tiePoints(currentRound.getHumanPlayer(), currentRound.getComputerPlayer());
-            }
+            winText = currentRound.tiePoints(currentRound.getHumanPlayer(), currentRound.getComputerPlayer());
+            Toast.makeText(this, winText, Toast.LENGTH_LONG).show();
+        }
         else
         {
             refreshUI();
@@ -506,7 +555,6 @@ public class MainActivity extends AppCompatActivity {
     {
 
         String winner = currentTournament.determineTournamentWinner();
-        Toast.makeText(this, winner, Toast.LENGTH_LONG).show();
 
         Intent intent = new Intent(this, TournamentWinnerActivity.class);
 
@@ -570,7 +618,12 @@ public class MainActivity extends AppCompatActivity {
     public void initSave(String fileName)
     {
 
-        currentTournament.initSave(currentRound.getHumanPlayer().getHand(), currentRound.getComputerPlayer().getHand(), currentRound.getGameStock(), currentRound.getLayout(), currentRound, fileName);
+        File saveFolder = new File(getExternalFilesDir(null), "SavedGames");
+        if (!saveFolder.exists()) saveFolder.mkdirs(); // make sure folder exists
+
+        File saveFile = new File(saveFolder, fileName + ".txt"); // inside folder
+
+        currentTournament.initSave(saveFolder, saveFile, currentRound.getHumanPlayer().getHand(), currentRound.getComputerPlayer().getHand(), currentRound.getGameStock(), currentRound.getLayout(), currentRound);
         ActivityCompat.finishAffinity(this); //
 
     }

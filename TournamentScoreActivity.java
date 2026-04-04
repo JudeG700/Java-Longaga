@@ -35,6 +35,13 @@ public class TournamentScoreActivity extends AppCompatActivity {
 
                 int tournamentScore = Integer.parseInt(textInside);
 
+
+                if(tournamentScore < 50 || tournamentScore > 250)
+                {
+                    input.setError("Choose a score between the displayed range");
+                    return;
+                }
+
                 Intent intent = new Intent(TournamentScoreActivity.this, MainActivity.class);
                 intent.putExtra("LOAD_OPTION", 1);
                 intent.putExtra("TOURNAMENT_SCORE", tournamentScore);

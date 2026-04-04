@@ -206,6 +206,10 @@ public class Round {
     }
 */
 
+    public Player getPlayerByIndex(int index)
+    {
+        return players[index];
+    }
     public Player getHumanPlayer()
     {
         return players[0];
@@ -226,7 +230,7 @@ public class Round {
         return layout;
     }
 
-    public void tiePoints(Player human, Player computer) {
+    public String tiePoints(Player human, Player computer) {
 // sum of points for human
         int sumHuman = 0;
         for (String tile : human.getHandTiles()) {
@@ -236,7 +240,6 @@ public class Round {
             sumHuman += a + b;
         }
 
-// sum of points for computer
         int sumComputer = 0;
         for (String tile : computer.getHandTiles()) {
             if (tile == null || tile.length() < 3) continue;
@@ -247,14 +250,15 @@ public class Round {
 
         // announce result; actual score bookkeeping should be handled by caller or Tournament
         if (sumHuman < sumComputer) {
-            System.out.println("Human wins the tied round! +" + sumComputer + " points");
             human.addPoints(sumComputer);
+            return "Human wins the tied round! +" + sumComputer + " points";
         } else if (sumComputer < sumHuman) {
-            System.out.println("Computer wins the tied round! +" + sumHuman + " points");
             computer.addPoints(sumHuman);
+            return "Computer wins the tied round! +" + sumComputer + " points";
         } else {
-            System.out.println("Tied round is a draw. No points awarded.");
+            return "Tied round is a draw. No points awarded.";
         }
+
     }
 
 
@@ -518,7 +522,11 @@ public class Round {
 
         if (layout.getChain().isEmpty()) {
 
+            setEIndex();
+
             String engine = obtainEngine();
+
+            setEngine(engine);
 
             int tempPlayer = currentPlayer;
             currentPlayer = (currentPlayer + 1) % 2;  // will cycle 0 → 1 → 0
@@ -531,13 +539,18 @@ public class Round {
 
             return players[tempPlayer].returnID() + " has the engine + ";
         }
-        return "Round resumed";
+        else
+        {
+            leftEnd = layout.returnLeft();
+            rightEnd = layout.returnRight();
+        }
+        return "Round initiated";
     }
     public void resetStats()
     {
         layout.clearChain();
 
-        incEIndex();
+        setEIndex();
 
         players[0].emptyHand();
         players[1].emptyHand();
@@ -551,26 +564,37 @@ public class Round {
 
     }
 
-    public boolean draw(Player.Move move)
+    public String draw(Player.Move move)
     {
         return players[0].handleDraw(move, gameStock, this, leftEnd, rightEnd);
 
     }
 
-    public boolean pass(Player.Move move)
+    public String pass(Player.Move move)
     {
-        boolean validPass = players[0].handlePass(move, gameStock);
+        String passText = players[0].handlePass(move, gameStock);
 
         final int HUMAN_INDEX = 0;
 
-        if(validPass)
+        if(passText.equals(" "))
         {
             setPassed(HUMAN_INDEX);
         }
-        return validPass;
+
+        return passText;
     }
 
-    public void winPoints(Player winner, Player loser) {
+    public void nextTurn()
+    {
+        currentPlayer = getCurrentPlayer();
+        setNextPlayer(currentPlayer);
+
+        currentPlayer = (currentPlayer + 1) % 2;  // will cycle 0 → 1 → 0
+        resetPass(currentPlayer);
+        setCurrentPlayer(currentPlayer);
+    }
+
+    public String winPoints(Player winner, Player loser) {
         int total = 0;
 
         // sum the pips in loser hand
@@ -584,18 +608,20 @@ public class Round {
             total += a + b;
         }
 
+        winner.addPoints(total);
+
         // announce the result; actual score bookkeeping should be handled by caller or Tournament
         if (winner.returnID().equals("Human"))
         {
-            System.out.println("Human wins the round! +" + total + " points");
+            return "+" + total + " points for human";
         }
         // if computer wins the round
         else if (winner.returnID().equals("Computer"))
         {
-            System.out.println("Computer wins the round! +" + total + " points");
+            return "+" + total + " points for computer";
         }
+        return "";
 
-        winner.addPoints(total);
     }
 
 
@@ -648,8 +674,9 @@ public class Round {
         roundOverFlag = true;
     }
 
-    public void incEIndex() {
-        engineIndex = (engineIndex + 1) % requiredEngines.size();
+    public void setEIndex() {
+        engineIndex = 0;
+        engineIndex = (engineIndex + (roundNum - 1)) % requiredEngines.size();
     }
 
     public void nextRound() {
@@ -732,9 +759,5 @@ public class Round {
 
     public boolean isPassed(int playerIndex) {
         return passed[playerIndex];
-    }
-
-    public String labelStateValue(boolean stateValue) {
-        return stateValue ? "Yes" : "No";
     }
 }

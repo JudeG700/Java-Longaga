@@ -123,9 +123,9 @@ public abstract class Player {
     public boolean checkValidity(Move move, Round gameRound, int leftEnd, int rightEnd)
         {return false;}
 
-    public boolean handleDraw(Player.Move move, Stock gameStock, Round round, int l, int r) {return true;}
+    public String handleDraw(Player.Move move, Stock gameStock, Round round, int l, int r) {return " ";}
 
-    public boolean handlePass(Player.Move move, Stock gameStock){return true;}
+    public String handlePass(Player.Move move, Stock gameStock){return " ";}
 
     public void addTile(String tile) {
         hand.addTile(tile);

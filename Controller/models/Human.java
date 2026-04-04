@@ -81,37 +81,36 @@ public class Human extends Player {
         return 0;                           // NONE
     }
 
-    public boolean handlePass(Move move, Stock gameStock)
+    public String handlePass(Move move, Stock gameStock)
     {
         /*
         if(move.hasPlayableTiles || !gameStock.getBoneyard().isEmpty())
         {
-            Log.i(ID, "You can still play or draw tiles");
-            return false;
-        }*/
+            return "You can still play or draw tiles";
+        } */
+
         move.passed = true;
-        return true;
+        return " ";
     }
 
 
-    public boolean handleDraw(Move move, Stock gameStock, Round gameRound, int leftEnd, int rightEnd) {
+    public String handleDraw(Move move, Stock gameStock, Round gameRound, int leftEnd, int rightEnd) {
 
         if(gameStock.getBoneyard().isEmpty())
         {
-            System.out.println("You have no more tiles to draw ");
-            return false;
+
+            return "You have no more tiles to draw ";
         }
         List<PlayableOption> playableList = findPlayableTiles(getHand(), gameRound, leftEnd, rightEnd);
         if (!playableList.isEmpty())
         {
-            System.out.println("You still have tiles you can play ");
-            return false;
+            return "You still have tiles you can play ";
         }
 
 
         String drawnTile = gameStock.drawTile();
         addTile(drawnTile);
-        System.out.println(returnID() + " drew " + drawnTile);
+        //System.out.println(returnID() + " drew " + drawnTile);
 
         Pips p = parseTile(drawnTile);
         boolean canLeft = matchesLeft(p, leftEnd);
@@ -132,12 +131,12 @@ public class Human extends Player {
             move.side = 'R';
             move.chosenTile = drawnTile;
         } else {
-            System.out.println("Cannot play " + drawnTile);
             move.draw = false;
             move.passed = true;
+            return "unplayable";
         }
 
-        return true;
+        return " ";
     }
 
     public boolean checkValidity(Move move, Round gameRound, int leftEnd, int rightEnd)
