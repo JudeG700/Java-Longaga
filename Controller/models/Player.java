@@ -43,16 +43,16 @@ public abstract class Player {
         public boolean passed;
         public boolean help;
         public boolean hasPlayableTiles;
-        public boolean choseSave;
+        public String reasoning;
 
         public Move() {
             chosenTile = "";
+            reasoning = "";
             side = ' ';
             draw = false;
             passed = false;
             help = false;
             hasPlayableTiles = false;
-            choseSave = false;
         }
     }
 
@@ -120,8 +120,8 @@ public abstract class Player {
 
 
 
-    public boolean checkValidity(Move move, Round gameRound, int leftEnd, int rightEnd)
-        {return false;}
+    public String checkValidity(Move move, Round gameRound, int leftEnd, int rightEnd)
+        {return " ";}
 
     public String handleDraw(Player.Move move, Stock gameStock, Round round, int l, int r) {return " ";}
 

@@ -82,7 +82,8 @@ public class GameView {
                 //currentMove.chosenTile = tile;
 
                 // STEP 2: Show the L/R buttons. NO AUTO-PLAY.
-                activity.findViewById(R.id.sideButtonsContainer).setVisibility(View.VISIBLE);
+                activity.findViewById(R.id.leftButton).setVisibility(View.VISIBLE);
+                activity.findViewById(R.id.rightButton).setVisibility(View.VISIBLE);
 
                 // STEP 3: Optional - highlight the selected tile so you know it's active
                 //iv.setBackgroundColor(android.graphics.Color.YELLOW);

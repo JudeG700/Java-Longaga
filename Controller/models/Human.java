@@ -98,7 +98,6 @@ public class Human extends Player {
 
         if(gameStock.getBoneyard().isEmpty())
         {
-
             return "You have no more tiles to draw ";
         }
         List<PlayableOption> playableList = findPlayableTiles(getHand(), gameRound, leftEnd, rightEnd);
@@ -123,7 +122,7 @@ public class Human extends Player {
         // On Android, you'd prompt user to pick side via UI
         if (canLeft && canRight) {
             // Return a signal to UI to ask for side choice
-            move.side = ' '; // placeholder
+            move.side = 'B'; // placeholder
         } else if (canLeft) {
             move.side = 'L';
             move.chosenTile = drawnTile;
@@ -139,7 +138,7 @@ public class Human extends Player {
         return " ";
     }
 
-    public boolean checkValidity(Move move, Round gameRound, int leftEnd, int rightEnd)
+    public String checkValidity(Move move, Round gameRound, int leftEnd, int rightEnd)
     {
 
         Pips p = parseTile(move.chosenTile);
@@ -150,16 +149,16 @@ public class Human extends Player {
             if (matchesLeft(p, leftEnd)) {
                 choiceValid = true;
             } else {
-                System.out.println("Invalid left move.");
+                return "Invalid left move.";
             }
         } else {
             if (canPlayRight(p, rightEnd, gameRound)) {
                 choiceValid = true;
             } else {
-                System.out.println("Invalid right move.");
+                return "Invalid right move.";
             }
         }
-        return choiceValid;
+        return " ";
 
     }
     @Override
@@ -171,7 +170,7 @@ public class Human extends Player {
         move.chosenTile = "";
         move.side = ' ';
         move.hasPlayableTiles = false;
-        move.choseSave = false;
+        move.reasoning = "";
 
         List<PlayableOption> playableList = findPlayableTiles(getHand(), gameRound, leftEnd, rightEnd);
         if (!playableList.isEmpty()) move.hasPlayableTiles = true;

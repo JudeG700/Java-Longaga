@@ -251,10 +251,10 @@ public class Round {
         // announce result; actual score bookkeeping should be handled by caller or Tournament
         if (sumHuman < sumComputer) {
             human.addPoints(sumComputer);
-            return "Human wins the tied round! +" + sumComputer + " points";
+            return "Human wins the tied round and computer loses! +" + sumComputer + " points for human";
         } else if (sumComputer < sumHuman) {
             computer.addPoints(sumHuman);
-            return "Computer wins the tied round! +" + sumComputer + " points";
+            return "Computer wins the tied round and human loses! +" + sumComputer + " points for computer";
         } else {
             return "Tied round is a draw. No points awarded.";
         }
@@ -262,7 +262,7 @@ public class Round {
     }
 
 
-    public void applyMove(
+    public String applyMove(
             Player player,
             Layout layout,
             Stock gameStock,
@@ -271,14 +271,34 @@ public class Round {
     ) {
 
 
-        if (move == null || move.chosenTile == null) {
-            return;
+        StringBuilder concatenation = new StringBuilder();
+
+
+        if(move == null)
+        {
+            return "Error: Move null";
+        }
+
+        if(move.draw && getCurrentPlayer() == 1)
+        {
+            concatenation.append(move.reasoning);
+            //return concatenation.toString();
         }
 
         if(move.passed)
         {
-            setPassed(currentPlayer);
-            return;
+            setPassed(getCurrentPlayer());
+            if(getCurrentPlayer() == 1)
+            {
+                concatenation.append(move.reasoning);
+                return concatenation.toString();
+            }
+            return player.returnID() + " passed";
+        }
+
+        //should not happen
+        if (move.chosenTile == null) {
+            return "Error: tile unplayable";
         }
 
         // 2. Parse the tile (e.g., "4-5" becomes a=4, b=5)
@@ -295,7 +315,12 @@ public class Round {
             // If the left side matches, we MUST flip it.
             if (a == leftEnd && a != b) {
                 tileToPlace = b + "-" + a; // Flip it
+                concatenation.append(player.returnID()).append(" flipped ").append(move.chosenTile).append(" to ").append(tileToPlace).append(" and played left.");
 
+            }
+            else
+            {
+                concatenation.append(player.returnID()).append(" played ").append(tileToPlace).append(" on the left side ");
             }
             layout.addLeft(tileToPlace);
         } else {
@@ -303,6 +328,11 @@ public class Round {
             // If the right side matches, we MUST flip it.
             if (b == rightEnd && a != b) {
                 tileToPlace = b + "-" + a; // Flip it
+                concatenation.append(player.returnID()).append(" flipped ").append(move.chosenTile).append(" to ").append(tileToPlace).append(" and played right.");
+            }
+            else
+            {
+                concatenation.append(player.returnID()).append(" played ").append(tileToPlace).append(" on the right side ");
             }
 
             this.leftEnd = layout.returnLeft();
@@ -321,6 +351,25 @@ public class Round {
         if (tileIndex != -1) {
             player.removeTile(tileIndex);
         }
+
+        //if it is a double
+        if(a == b && getCurrentPlayer() == 1)
+        {
+            concatenation.append("Trying to get rid of doubles as soon as possible. ");
+            concatenation.append("Doubles placed left on player's side for purpose of messing their tile streak up. ");
+
+        }
+        else if(a != b && getCurrentPlayer() == 1)
+        {
+            int totalPipValue = a + b;
+            concatenation.append("The pips on my current tile, ").append(a).append(" and ").append(b).append(", add up to ").append(totalPipValue).append(". ");
+            concatenation.append("This is a higher sum value than the other tiles I can play. ");
+            concatenation.append("Continuing to hold tiles with lots of pips would soften the blow if I were to lose; the player gets less points. ");
+
+        }
+
+        return (concatenation.toString());
+
     }
 
     public void processLine(String line, BufferedReader reader) throws IOException {
@@ -475,9 +524,10 @@ public class Round {
     }
 
 
-    public void applyMove(Player.Move move)
+    public String updateMove(Player.Move move)
     {
-        applyMove(players[currentPlayer], layout, gameStock, this, move);
+        String moveText = applyMove(players[currentPlayer], layout, gameStock, this, move);
+        return moveText;
     }
 
     public Player.Move takeTurn() {
@@ -488,30 +538,6 @@ public class Round {
         return move;
 
     }
-
-    /*public String startRound()
-    {
-        if (players[0].getHandTiles().isEmpty() && players[1].getHandTiles().isEmpty()) {
-            dealTiles();
-        }
-
-        if (layout.getChain().isEmpty()) {
-            String engineFound = obtainEngine(); // This sets currentPlayer internally
-            layout.addRight(engineFound);
-
-            // Update the ends so the next move knows what to match
-            leftEnd = engineFound.charAt(0) - '0';
-            rightEnd = engineFound.charAt(2) - '0';
-
-            // CRITICAL: Switch to the NEXT player after the engine is placed
-            //nextPlayer = currentPlayer;
-            //currentPlayer = (currentPlayer + 1) % 2;
-            //setCurrentPlayer(currentPlayer);
-
-            return "Engine " + engineFound + " placed. Next: " + players[currentPlayer].returnID();
-        }
-        return "Round resumed";
-    }*/
 
     public String startRound() {
 
@@ -528,16 +554,14 @@ public class Round {
 
             setEngine(engine);
 
-            int tempPlayer = currentPlayer;
-            currentPlayer = (currentPlayer + 1) % 2;  // will cycle 0 → 1 → 0
-            setCurrentPlayer(currentPlayer);
+            //nextTurn();
 
             layout.addRight(engine);
 
             leftEnd = engine.charAt(0) - '0';
             rightEnd = engine.charAt(2) - '0';
 
-            return players[tempPlayer].returnID() + " has the engine + ";
+            return players[currentPlayer].returnID() + " has the engine + ";
         }
         else
         {
@@ -641,7 +665,7 @@ public class Round {
         String advice = players[1].help(players[0], move, gameStock, this, leftEnd, rightEnd);
         return advice;
     }
-    public boolean validate(Player.Move move)
+    public String validate(Player.Move move)
     {
         return players[0].checkValidity(move, this, getLayout().returnLeft(), getLayout().returnRight());
     }

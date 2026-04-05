@@ -18,13 +18,17 @@ public class TournamentWinnerActivity extends AppCompatActivity {
 
         // 2. Get Intent extras
         Intent intent = getIntent();
-        String playerName = intent.getStringExtra("PLAYER_NAME");
+        String winner = intent.getStringExtra("WINNER");
+        String loser = intent.getStringExtra("LOSER");
+
         int score = intent.getIntExtra("TOURNAMENT_SCORE", 0);
 
         // 3. Set the text
-        String message = "And the winner for this tournament is "
-                + playerName + " with a score of " + score;
 
+        StringBuilder message = new StringBuilder();
+
+        message.append("And the winner for this tournament is ").append(winner).append(" with a score of ").append(score).append(" .");
+        message.append("The loser is ").append(loser);
         resultText.setText(message);
     }
 }

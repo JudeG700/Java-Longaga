@@ -186,6 +186,7 @@ public class Computer extends Player {
         move.passed = false;
         move.help = false;
         move.chosenTile = "";
+        move.reasoning = "";
         move.side = ' ';
         move.hasPlayableTiles = false;
 
@@ -193,20 +194,24 @@ public class Computer extends Player {
 
         if (playableTiles.isEmpty()) {
             if (gameStock.getBoneyard().isEmpty()) {
-                System.out.println("There are no playable tiles and the boneyard's empty. I will pass.");
+                move.reasoning = "There are no playable tiles and the boneyard's empty. I will pass.";
                 move.passed = true;
                 return move;
             } else {
                 move.draw = true;
                 String drawn = gameStock.drawTile();
                 hand.addTile(drawn);
-                System.out.println("Drew tile " + drawn);
+                //move.reasoning = "There are no more playable tiles";
 
                 playableTiles = findPlayableTiles(hand, gameRound, leftEnd, rightEnd);
                 if (playableTiles.isEmpty()) {
-                    System.out.println("Can't play " + drawn + ". Passing.");
+                    move.reasoning = "Can't play drawn tile " + drawn + ". Passing.";
                     move.passed = true;
                     return move;
+                }
+                else
+                {
+                    move.reasoning = "Drew tile " + drawn + " since I have no more playable tiles";
                 }
             }
         }

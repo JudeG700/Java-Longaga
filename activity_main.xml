@@ -41,7 +41,7 @@
 
     </LinearLayout>
 
-
+    <!--
     <LinearLayout
         android:id="@+id/layout"
         android:layout_width="411dp"
@@ -55,6 +55,48 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/computerHand">
+
+    </LinearLayout>
+        -->
+
+    <LinearLayout
+        android:id="@+id/labelContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="96dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/computerHand">
+
+        <TextView
+            android:id="@+id/labelLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="L"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:padding="8dp"/>
+
+        <LinearLayout
+            android:id="@+id/layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:gravity="center"
+            android:orientation="horizontal">
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/labelRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="R"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:padding="8dp"/>
 
     </LinearLayout>
 
@@ -125,7 +167,7 @@
         android:text="Next Round"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/layout"
+        app:layout_constraintTop_toBottomOf="@+id/labelContainer"
         tools:ignore="MissingConstraints" />
 
     <Button
@@ -139,29 +181,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/boneyard" />
 
-    <LinearLayout
-        android:id="@+id/sideButtonsContainer"
+    <Button
+        android:id="@+id/leftButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:text="Left"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/boneyard"
-        app:layout_constraintEnd_toStartOf="@+id/saveButton">
+        app:layout_constraintStart_toStartOf="@+id/labelContainer"
+        app:layout_constraintBottom_toTopOf="@+id/labelContainer"
+        android:layout_marginStart="16dp" />
 
-        <Button
-            android:id="@+id/leftButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Left" />
-
-        <Button
-            android:id="@+id/rightButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Right" />
-
-
-    </LinearLayout>
+    <Button
+        android:id="@+id/rightButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Right"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@+id/labelContainer"
+        app:layout_constraintBottom_toTopOf="@+id/labelContainer"
+        android:layout_marginEnd="16dp" />
 
 
     <TextView
@@ -190,8 +228,8 @@
 
     <TextView
         android:id="@+id/statusText"
-        android:layout_width="140dp"
-        android:layout_height="25dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:layout_marginTop="16dp"
         android:textStyle="bold"
