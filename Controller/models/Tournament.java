@@ -2,13 +2,9 @@ package com.example.primaryjavalongaga.Controller.models;
 
 import android.util.Log;
 
-import androidx.core.app.ActivityCompat;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -109,7 +105,7 @@ public class Tournament {
         }
     } */
 
-    public void saveGameState(File saveFolder, File saveFile, Hand humanHand, Hand computerHand, Stock gameStock, Layout layout, Round currentRound) {
+    public void saveGameState(File saveFolder, File saveFile, Hand humanHand, Hand computerHand, Stock gameStock, Board layout, Round currentRound) {
         // 1. Make sure the folder exists
         if (!saveFolder.exists()) saveFolder.mkdirs();
 
@@ -122,12 +118,12 @@ public class Tournament {
             outFile.write("Computer:\n   Hand: ");
             for (String tile : computerHand.getHandTiles())
                 outFile.write(tile + " ");
-            outFile.write("\n   Score: " + getComputerScore() + "\n\n");
+            outFile.write("\n   Score: " + currentRound.getComputerPlayer().getScore() + "\n\n");
 
             outFile.write("Human:\n   Hand: ");
             for (String tile : humanHand.getHandTiles())
                 outFile.write(tile + " ");
-            outFile.write("\n   Score: " + getHumanScore() + "\n\n");
+            outFile.write("\n   Score: " + currentRound.getHumanPlayer().getScore() + "\n\n");
 
             outFile.write("Layout:\n  L ");
             for (String tile : layout.getChain())
@@ -229,7 +225,7 @@ public class Tournament {
 
 
 
-    public void initSave(File saveFolder, File saveFile, Hand humanHand, Hand computerHand, Stock gameStock, Layout layout, Round currentRound) {
+    public void initSave(File saveFolder, File saveFile, Hand humanHand, Hand computerHand, Stock gameStock, Board layout, Round currentRound) {
 
 
         saveGameState(saveFolder, saveFile, humanHand, computerHand, gameStock, layout, currentRound);

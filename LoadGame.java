@@ -37,11 +37,9 @@ public class LoadGame extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_load_file);
 
-        // 1. Get the folder
         File folder = new File(getExternalFilesDir(null), "SavedGames");
         if (!folder.exists()) folder.mkdirs();
 
-// 2. Define your 3 cases
         String[] filenames = {"case1.txt", "case2.txt", "case3.txt"};
         String[] contents = {
                 "Tournament Score: 100\n" +

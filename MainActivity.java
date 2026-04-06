@@ -15,29 +15,14 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
-import com.example.primaryjavalongaga.Controller.models.Hand;
-import com.example.primaryjavalongaga.Controller.models.Layout;
 import com.example.primaryjavalongaga.Controller.models.Player;
 import com.example.primaryjavalongaga.Controller.models.Round;
-import com.example.primaryjavalongaga.Controller.models.Stock;
 import com.example.primaryjavalongaga.Controller.models.Tournament;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.List;
-import java.util.Scanner;
-
-import android.os.Bundle;
-import android.view.View;
-import android.widget.Toast;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -176,9 +161,22 @@ public class MainActivity extends AppCompatActivity {
 
             String fileContent = getIntent().getStringExtra("FILE_CONTENT");
             loadFile(fileContent);
-            String emptyText = currentRound.startRound();
+            String gameText = currentRound.startRound();
             refreshUI();
-            checkPlayerTurn();
+
+            if (gameText.equals("Game resumed"))
+            {
+                //for case 2 && 3
+                checkPlayerTurn();
+            }
+            else
+            {
+                //for case 1
+                switchTurn();
+
+            }
+
+
 
         }
 
@@ -242,6 +240,7 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .show();
         }
+        nextTurn();
         refreshUI();
         findViewById(R.id.doneButton).setVisibility(View.VISIBLE);
 
@@ -293,9 +292,11 @@ public class MainActivity extends AppCompatActivity {
         }
         else
         {
-            if(currentMove.side == 'B')
+            if(currentMove.side == ' ')
             {
-                handleSideChoice(currentMove.side);
+                findViewById(R.id.leftButton).setVisibility(View.VISIBLE);
+                findViewById(R.id.rightButton).setVisibility(View.VISIBLE);
+
             }
             else
             {
@@ -357,13 +358,20 @@ public class MainActivity extends AppCompatActivity {
     {
         enableButtons();
 
-        findViewById(R.id.doneButton).setVisibility(View.GONE);
-        checkForRoundWinner();
-
-        nextTurn();
-
         refreshUI();
-        checkPlayerTurn();
+        findViewById(R.id.doneButton).setVisibility(View.GONE);
+
+        if(checkForRoundWinner())
+        {
+            return;
+        }
+        else
+        {
+
+            checkPlayerTurn();
+
+        }
+
 
     }
     private void checkPlayerTurn()
@@ -663,7 +671,7 @@ public class MainActivity extends AppCompatActivity {
     } */
 
 
-    private void checkForRoundWinner() {
+    private boolean checkForRoundWinner() {
         String winText = "";
         // 1. Check the flags from your Round class
         if (currentRound.getHumanPlayer().getHandTiles().isEmpty()) {
@@ -684,15 +692,14 @@ public class MainActivity extends AppCompatActivity {
         else
         {
             refreshUI();
-            return;
+            return false;
         }
-
 
         addScores();
         refreshUI();
-
         checkTournamentWinner();
         endRound();
+        return true;
     }
 
     public void addScores()

@@ -107,6 +107,7 @@ public class Human extends Player {
         }
 
 
+
         String drawnTile = gameStock.drawTile();
         addTile(drawnTile);
         //System.out.println(returnID() + " drew " + drawnTile);
@@ -122,7 +123,8 @@ public class Human extends Player {
         // On Android, you'd prompt user to pick side via UI
         if (canLeft && canRight) {
             // Return a signal to UI to ask for side choice
-            move.side = 'B'; // placeholder
+            move.side = ' '; // placeholder
+            move.chosenTile = drawnTile;
         } else if (canLeft) {
             move.side = 'L';
             move.chosenTile = drawnTile;

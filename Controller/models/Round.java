@@ -31,7 +31,7 @@ public class Round {
     };
 
     // Represents the sequence of domino tiles currently placed on the board.
-    Layout layout = new Layout();
+    Board layout = new Board();
 
     // These variables store the numeric values at the left and right
     // ends of the layout so the program can determine legal tile placements.
@@ -225,7 +225,7 @@ public class Round {
         return gameStock;
     }
 
-    public Layout getLayout()
+    public Board getLayout()
     {
         return layout;
     }
@@ -264,7 +264,7 @@ public class Round {
 
     public String applyMove(
             Player player,
-            Layout layout,
+            Board layout,
             Stock gameStock,
             Round gameRound,
             Player.Move move
@@ -554,8 +554,6 @@ public class Round {
 
             setEngine(engine);
 
-            //nextTurn();
-
             layout.addRight(engine);
 
             leftEnd = engine.charAt(0) - '0';
@@ -567,8 +565,9 @@ public class Round {
         {
             leftEnd = layout.returnLeft();
             rightEnd = layout.returnRight();
+            return "Game resumed";
+
         }
-        return "Round initiated";
     }
     public void resetStats()
     {
